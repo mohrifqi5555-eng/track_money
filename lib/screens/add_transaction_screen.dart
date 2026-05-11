@@ -30,7 +30,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add Transaction', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Tambah Transaksi', style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
         elevation: 0,
         backgroundColor: Colors.transparent,
@@ -41,21 +41,21 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             FadeInDown(
-              child: _buildInputLabel('Transaction Name'),
+              child: _buildInputLabel('Nama Transaksi'),
             ),
             const SizedBox(height: 10),
             FadeInDown(
               delay: const Duration(milliseconds: 100),
               child: _buildTextField(
                 controller: _titleController,
-                hint: 'e.g. Salary, Groceries, Dinner',
+                hint: 'cth. Gaji, Belanja, Makan Malam',
                 icon: Icons.edit_note_rounded,
               ),
             ),
             const SizedBox(height: 24),
             FadeInDown(
               delay: const Duration(milliseconds: 200),
-              child: _buildInputLabel('Amount'),
+              child: _buildInputLabel('Jumlah'),
             ),
             const SizedBox(height: 10),
             FadeInDown(
@@ -71,7 +71,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             const SizedBox(height: 24),
             FadeInDown(
               delay: const Duration(milliseconds: 400),
-              child: _buildInputLabel('Type'),
+              child: _buildInputLabel('Tipe'),
             ),
             const SizedBox(height: 10),
             FadeInDown(
@@ -79,7 +79,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               child: Row(
                 children: [
                   _buildTypeButton(
-                    label: 'Income',
+                    label: 'Pemasukan',
                     isActive: _isIncome,
                     onTap: () => setState(() => _isIncome = true),
                     activeColor: AppTheme.incomeColor,
@@ -87,7 +87,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   ),
                   const SizedBox(width: 16),
                   _buildTypeButton(
-                    label: 'Expense',
+                    label: 'Pengeluaran',
                     isActive: !_isIncome,
                     onTap: () => setState(() => _isIncome = false),
                     activeColor: AppTheme.expenseColor,
@@ -99,7 +99,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             const SizedBox(height: 24),
             FadeInDown(
               delay: const Duration(milliseconds: 600),
-              child: _buildInputLabel('Date'),
+              child: _buildInputLabel('Tanggal'),
             ),
             const SizedBox(height: 10),
             FadeInDown(
@@ -149,7 +149,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     shadowColor: AppTheme.primaryColor.withOpacity(0.5),
                   ),
                   onPressed: _submitData,
-                  child: const Text('Save Transaction', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  child: const Text('Simpan Transaksi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
               ),
             ),

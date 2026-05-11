@@ -35,11 +35,11 @@ class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
   final List<Transaction> _userTransactions = [
-    Transaction(id: 't1', title: 'Monthly Salary', amount: 15000000, isIncome: true, date: DateTime.now().subtract(const Duration(days: 1))),
-    Transaction(id: 't2', title: 'Coffee', amount: 45000, isIncome: false, date: DateTime.now()),
-    Transaction(id: 't3', title: 'Groceries', amount: 250000, isIncome: false, date: DateTime.now()),
-    Transaction(id: 't4', title: 'Freelance Design', amount: 2000000, isIncome: true, date: DateTime.now().subtract(const Duration(days: 2))),
-    Transaction(id: 't5', title: 'Internet Bill', amount: 350000, isIncome: false, date: DateTime.now().subtract(const Duration(days: 3))),
+    Transaction(id: 't1', title: 'Gaji Bulanan', amount: 15000000, isIncome: true, date: DateTime.now().subtract(const Duration(days: 1))),
+    Transaction(id: 't2', title: 'Kopi', amount: 45000, isIncome: false, date: DateTime.now()),
+    Transaction(id: 't3', title: 'Belanja Harian', amount: 250000, isIncome: false, date: DateTime.now()),
+    Transaction(id: 't4', title: 'Desain Freelance', amount: 2000000, isIncome: true, date: DateTime.now().subtract(const Duration(days: 2))),
+    Transaction(id: 't5', title: 'Tagihan Internet', amount: 350000, isIncome: false, date: DateTime.now().subtract(const Duration(days: 3))),
   ];
 
   void _addNewTransaction(String title, double amount, bool isIncome, DateTime date) {
@@ -67,8 +67,8 @@ class _MainScreenState extends State<MainScreen> {
     final List<Widget> pages = [
       DashboardScreen(transactions: _userTransactions),
       HistoryScreen(transactions: _userTransactions, deleteTx: _deleteTransaction),
-      const Center(child: Text('Reports Coming Soon', style: TextStyle(fontWeight: FontWeight.bold))),
-      const Center(child: Text('Profile Settings', style: TextStyle(fontWeight: FontWeight.bold))),
+      const Center(child: Text('Laporan Segera Hadir', style: TextStyle(fontWeight: FontWeight.bold))),
+      const Center(child: Text('Pengaturan Profil', style: TextStyle(fontWeight: FontWeight.bold))),
     ];
 
     return Scaffold(
@@ -109,10 +109,10 @@ class _MainScreenState extends State<MainScreen> {
           showUnselectedLabels: false,
           selectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12),
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.receipt_long_rounded), label: 'History'),
-            BottomNavigationBarItem(icon: Icon(Icons.bar_chart_rounded), label: 'Reports'),
-            BottomNavigationBarItem(icon: Icon(Icons.person_outline_rounded), label: 'Profile'),
+            BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: 'Beranda'),
+            BottomNavigationBarItem(icon: Icon(Icons.receipt_long_rounded), label: 'Riwayat'),
+            BottomNavigationBarItem(icon: Icon(Icons.bar_chart_rounded), label: 'Laporan'),
+            BottomNavigationBarItem(icon: Icon(Icons.person_outline_rounded), label: 'Profil'),
           ],
         ),
       ),

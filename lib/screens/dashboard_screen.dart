@@ -32,7 +32,7 @@ class DashboardScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Welcome Back,',
+                      'Selamat Datang,',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppTheme.textSecondary),
                     ),
                     Text(
@@ -80,7 +80,7 @@ class DashboardScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Total Balance',
+                    'Total Saldo',
                     style: TextStyle(color: Colors.white70, fontSize: 16),
                   ),
                   const SizedBox(height: 8),
@@ -92,14 +92,14 @@ class DashboardScreen extends StatelessWidget {
                   Row(
                     children: [
                       _buildBalanceDetail(
-                        label: 'Income',
+                        label: 'Pemasukan',
                         amount: totalIncome,
                         icon: Icons.arrow_downward_rounded,
                         color: Colors.white,
                       ),
                       Container(width: 1, height: 40, color: Colors.white24, margin: const EdgeInsets.symmetric(horizontal: 20)),
                       _buildBalanceDetail(
-                        label: 'Expense',
+                        label: 'Pengeluaran',
                         amount: totalExpense,
                         icon: Icons.arrow_upward_rounded,
                         color: Colors.white,
@@ -118,12 +118,12 @@ class DashboardScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Recent Transactions',
+                  'Transaksi Terbaru',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 TextButton(
                   onPressed: () {},
-                  child: const Text('See All', style: TextStyle(color: AppTheme.accentColor, fontWeight: FontWeight.bold)),
+                  child: const Text('Lihat Semua', style: TextStyle(color: AppTheme.accentColor, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),

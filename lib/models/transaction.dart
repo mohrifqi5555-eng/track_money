@@ -14,6 +14,6 @@ class Transaction {
     required this.amount,
     required this.isIncome,
     required this.date,
-    this.category = 'General',
+    this.category = 'Umum',
   });
 }

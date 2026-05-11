@@ -14,11 +14,11 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  String _filter = 'All';
+  String _filter = 'Semua';
 
   List<Transaction> get _filteredTransactions {
-    if (_filter == 'Income') return widget.transactions.where((tx) => tx.isIncome).toList();
-    if (_filter == 'Expense') return widget.transactions.where((tx) => !tx.isIncome).toList();
+    if (_filter == 'Pemasukan') return widget.transactions.where((tx) => tx.isIncome).toList();
+    if (_filter == 'Pengeluaran') return widget.transactions.where((tx) => !tx.isIncome).toList();
     return widget.transactions;
   }
 
@@ -33,7 +33,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               child: Row(
                 children: [
                   Text(
-                    'History',
+                    'Riwayat',
                     style: Theme.of(context).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -47,9 +47,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: [
-                  _buildFilterChip('All'),
-                  _buildFilterChip('Income'),
-                  _buildFilterChip('Expense'),
+                  _buildFilterChip('Semua'),
+                  _buildFilterChip('Pemasukan'),
+                  _buildFilterChip('Pengeluaran'),
                 ],
               ),
             ),
@@ -64,7 +64,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           Icon(Icons.receipt_long_rounded, size: 80, color: Colors.grey.withOpacity(0.3)),
                           const SizedBox(height: 16),
                           Text(
-                            'No transactions found',
+                            'Tidak ada transaksi',
                             style: TextStyle(color: Colors.grey.withOpacity(0.5), fontSize: 18),
                           ),
                         ],
@@ -93,7 +93,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               widget.deleteTx(tx.id);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('${tx.title} deleted'),
+                                  content: Text('${tx.title} dihapus'),
                                   behavior: SnackBarBehavior.floating,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                   backgroundColor: AppTheme.textPrimary,
