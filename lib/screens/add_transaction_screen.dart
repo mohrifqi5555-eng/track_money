@@ -43,7 +43,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             FadeInDown(
               child: _buildInputLabel('Nama Transaksi'),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             FadeInDown(
               delay: const Duration(milliseconds: 100),
               child: _buildTextField(
@@ -57,7 +57,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               delay: const Duration(milliseconds: 200),
               child: _buildInputLabel('Jumlah'),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             FadeInDown(
               delay: const Duration(milliseconds: 300),
               child: _buildTextField(
@@ -73,7 +73,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               delay: const Duration(milliseconds: 400),
               child: _buildInputLabel('Tipe'),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             FadeInDown(
               delay: const Duration(milliseconds: 500),
               child: Row(
@@ -101,7 +101,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               delay: const Duration(milliseconds: 600),
               child: _buildInputLabel('Tanggal'),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             FadeInDown(
               delay: const Duration(milliseconds: 700),
               child: InkWell(
@@ -114,12 +114,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   );
                   if (picked != null) setState(() => _selectedDate = picked);
                 },
+                borderRadius: BorderRadius.circular(20),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                    border: Border.all(color: const Color(0x1A9E9E9E)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -128,13 +129,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         DateFormat('dd MMMM yyyy').format(_selectedDate),
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                       ),
-                      const Icon(Icons.calendar_today_rounded, color: AppTheme.accentColor),
+                      const Icon(Icons.calendar_today_rounded, color: AppTheme.primaryColor),
                     ],
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 48),
+            const SizedBox(height: 40),
             FadeInUp(
               delay: const Duration(milliseconds: 800),
               child: SizedBox(
@@ -143,13 +144,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryColor,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    elevation: 5,
-                    shadowColor: AppTheme.primaryColor.withOpacity(0.5),
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 4,
+                    shadowColor: const Color(0x4D059669), // primaryColor 30%
                   ),
                   onPressed: _submitData,
-                  child: const Text('Simpan Transaksi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  child: const Text('Simpan Transaksi', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
             ),
@@ -176,29 +177,32 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [BoxShadow(color: Color(0x03000000), blurRadius: 10)],
       ),
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
         decoration: InputDecoration(
           hintText: hint,
-          prefixIcon: Icon(icon, color: AppTheme.accentColor),
+          hintStyle: const TextStyle(color: Color(0x8064748B), fontWeight: FontWeight.normal),
+          prefixIcon: Icon(icon, color: AppTheme.primaryColor, size: 22),
           prefixText: prefixText,
           prefixStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textPrimary),
+          filled: true,
+          fillColor: Colors.white,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0x1A9E9E9E)),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: BorderSide(color: Colors.grey.withOpacity(0.2)),
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0x1A9E9E9E)),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(20),
-            borderSide: const BorderSide(color: AppTheme.accentColor, width: 2),
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: AppTheme.primaryColor, width: 1.5),
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         ),
@@ -216,28 +220,33 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     return Expanded(
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 18),
+        borderRadius: BorderRadius.circular(16),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: isActive ? activeColor.withOpacity(0.1) : Colors.white,
+            color: isActive 
+              ? (activeColor == AppTheme.incomeColor 
+                  ? const Color(0x1410B981) 
+                  : const Color(0x14EF4444))
+              : Colors.white,
             border: Border.all(
-              color: isActive ? activeColor : Colors.grey.withOpacity(0.2),
-              width: 2,
+              color: isActive ? activeColor : const Color(0x1A9E9E9E),
+              width: 1.5,
             ),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: isActive ? activeColor : Colors.grey, size: 20),
+              Icon(icon, color: isActive ? activeColor : AppTheme.textSecondary, size: 18),
               const SizedBox(width: 8),
               Text(
                 label,
                 style: TextStyle(
-                  color: isActive ? activeColor : Colors.grey,
+                  color: isActive ? activeColor : AppTheme.textSecondary,
                   fontWeight: FontWeight.bold,
-                  fontSize: 16,
+                  fontSize: 14,
                 ),
               ),
             ],

@@ -6,7 +6,11 @@ import 'package:track_money/screens/add_transaction_screen.dart';
 import 'package:track_money/theme/app_theme.dart';
 import 'package:track_money/models/transaction.dart';
 
-void main() {
+import 'package:intl/date_symbol_data_local.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id', null);
   runApp(const MoneyTrackApp());
 }
 
@@ -41,6 +45,7 @@ class _MainScreenState extends State<MainScreen> {
     Transaction(id: 't4', title: 'Desain Freelance', amount: 2000000, isIncome: true, date: DateTime.now().subtract(const Duration(days: 2))),
     Transaction(id: 't5', title: 'Tagihan Internet', amount: 350000, isIncome: false, date: DateTime.now().subtract(const Duration(days: 3))),
   ];
+  // stray entries removed
 
   void _addNewTransaction(String title, double amount, bool isIncome, DateTime date) {
     final newTx = Transaction(
@@ -73,28 +78,32 @@ class _MainScreenState extends State<MainScreen> {
 
     return Scaffold(
       body: pages[_currentIndex],
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AddTransactionScreen(addTx: _addNewTransaction),
-            ),
-          );
-        },
-        backgroundColor: AppTheme.primaryColor,
-        shape: const CircleBorder(),
-        elevation: 8,
-        child: const Icon(Icons.add_rounded, color: Colors.white, size: 32),
+      floatingActionButton: SizedBox(
+        height: 56,
+        width: 56,
+        child: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AddTransactionScreen(addTx: _addNewTransaction),
+              ),
+            );
+          },
+          backgroundColor: AppTheme.primaryColor,
+          elevation: 4,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
+              color: Color(0x08000000), // black 3%
+              blurRadius: 10,
+              offset: Offset(0, -5),
             ),
           ],
         ),
@@ -104,10 +113,11 @@ class _MainScreenState extends State<MainScreen> {
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.white,
           selectedItemColor: AppTheme.primaryColor,
-          unselectedItemColor: Colors.grey.withOpacity(0.5),
+          unselectedItemColor: const Color(0xFF94A3B8),
           showSelectedLabels: true,
-          showUnselectedLabels: false,
-          selectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12),
+          showUnselectedLabels: true,
+          selectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 12),
+          unselectedLabelStyle: GoogleFonts.outfit(fontWeight: FontWeight.w500, fontSize: 12),
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: 'Beranda'),
             BottomNavigationBarItem(icon: Icon(Icons.receipt_long_rounded), label: 'Riwayat'),

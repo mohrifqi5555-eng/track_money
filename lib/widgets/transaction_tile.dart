@@ -5,43 +5,44 @@ import '../theme/app_theme.dart';
 
 class TransactionTile extends StatelessWidget {
   final Transaction transaction;
-  const TransactionTile({Key? key, required this.transaction}) : super(key: key);
+  const TransactionTile({super.key, required this.transaction});
 
   @override
   Widget build(BuildContext context) {
     final formatCurrency = NumberFormat.currency(locale: 'id', symbol: 'Rp ', decimalDigits: 0);
     
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0x0D9E9E9E)),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Color(0x05000000), // black 2%
             blurRadius: 10,
-            offset: const Offset(0, 4),
+            offset: Offset(0, 4),
           ),
         ],
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: transaction.isIncome 
-                ? AppTheme.incomeColor.withOpacity(0.1) 
-                : AppTheme.expenseColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
+                ? const Color(0x1410B981) // incomeColor 8%
+                : const Color(0x14EF4444), // expenseColor 8%
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
-              transaction.isIncome ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
+              transaction.isIncome ? Icons.south_west_rounded : Icons.north_east_rounded,
               color: transaction.isIncome ? AppTheme.incomeColor : AppTheme.expenseColor,
-              size: 24,
+              size: 20,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,12 +51,14 @@ class TransactionTile extends StatelessWidget {
                   transaction.title,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
+                    fontSize: 15,
                   ),
                 ),
                 Text(
                   DateFormat('dd MMM yyyy').format(transaction.date),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppTheme.textSecondary,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -65,6 +68,7 @@ class TransactionTile extends StatelessWidget {
             (transaction.isIncome ? '+ ' : '- ') + formatCurrency.format(transaction.amount),
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
+              fontSize: 15,
               color: transaction.isIncome ? AppTheme.incomeColor : AppTheme.expenseColor,
             ),
           ),
