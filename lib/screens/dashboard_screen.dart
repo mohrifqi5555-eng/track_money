@@ -97,7 +97,7 @@ class DashboardScreen extends StatelessWidget {
                         icon: Icons.arrow_downward_rounded,
                         color: Colors.white,
                       ),
-                      Container(width: 1, height: 40, color: Colors.white24, margin: const EdgeInsets.symmetric(horizontal: 20)),
+                      Container(width: 1, height: 40, color: Colors.white24, margin: const EdgeInsets.symmetric(horizontal: 12)),
                       _buildBalanceDetail(
                         label: 'Pengeluaran',
                         amount: totalExpense,
@@ -159,16 +159,23 @@ class DashboardScreen extends StatelessWidget {
             ),
             child: Icon(icon, color: color, size: 16),
           ),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-              Text(
-                currencyFormatter.format(amount),
-                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
-              ),
-            ],
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  currencyFormatter.format(amount),
+                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           ),
         ],
       ),
