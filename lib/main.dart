@@ -5,6 +5,7 @@ import 'package:track_money/screens/history_screen.dart';
 import 'package:track_money/screens/add_transaction_screen.dart';
 import 'package:track_money/theme/app_theme.dart';
 import 'package:track_money/models/transaction.dart';
+import 'package:track_money/screens/reports_screen.dart';
 
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:track_money/services/notification_service.dart';
@@ -114,7 +115,7 @@ class _MainScreenState extends State<MainScreen> {
     final List<Widget> pages = [
       DashboardScreen(transactions: _userTransactions),
       HistoryScreen(transactions: _userTransactions, deleteTx: _deleteTransaction),
-      const Center(child: Text('Laporan Segera Hadir', style: TextStyle(fontWeight: FontWeight.bold))),
+      ReportsScreen(transactions: _userTransactions),
       const Center(child: Text('Pengaturan Profil', style: TextStyle(fontWeight: FontWeight.bold))),
     ];
 

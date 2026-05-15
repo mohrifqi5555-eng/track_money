@@ -349,8 +349,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 
   Future<bool?> _confirmDelete(BuildContext context, AppNotification notification) {
