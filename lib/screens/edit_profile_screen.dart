@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:image_picker/image_picker.dart';
 import '../providers/user_provider.dart';
 import '../theme/app_theme.dart';
 
@@ -16,7 +18,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _emailController;
-  late String _photoUrl;
+  late String _photoPath;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -24,7 +27,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     _nameController = TextEditingController(text: userProvider.name);
     _emailController = TextEditingController(text: userProvider.email);
-    _photoUrl = userProvider.profilePhoto;
+    _photoPath = userProvider.profilePhoto;
   }
 
   @override
@@ -32,6 +35,114 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nameController.dispose();
     _emailController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: source,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 80,
+      );
+
+      if (image != null) {
+        setState(() => _isLoading = true);
+        
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        final String savedPath = await userProvider.saveImageLocally(File(image.path));
+        
+        setState(() {
+          _photoPath = savedPath;
+          _isLoading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Foto berhasil dipilih'), backgroundColor: AppTheme.primaryColor),
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memilih foto: $e'), backgroundColor: AppTheme.expenseColor),
+      );
+    }
+  }
+
+  void _showImagePickerOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Ubah Foto Profil',
+              style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildPickerOption(
+                  icon: Icons.camera_alt_rounded,
+                  label: 'Kamera',
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(ImageSource.camera);
+                  },
+                ),
+                _buildPickerOption(
+                  icon: Icons.photo_library_rounded,
+                  label: 'Galeri',
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage(ImageSource.gallery);
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPickerOption({required IconData icon, required String label, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: AppTheme.primaryColor, size: 32),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
   }
 
   @override
@@ -62,19 +173,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                         child: CircleAvatar(
                           radius: 60,
-                          backgroundImage: NetworkImage(_photoUrl),
+                          backgroundColor: Colors.grey.shade200,
+                          backgroundImage: _getProfileImage(),
+                          child: _isLoading ? const CircularProgressIndicator(color: AppTheme.primaryColor) : null,
                         ),
                       ),
                       Positioned(
                         bottom: 0,
                         right: 0,
                         child: GestureDetector(
-                          onTap: () {
-                            // In a real app, use image_picker
-                            setState(() {
-                              _photoUrl = 'https://i.pravatar.cc/150?u=${DateTime.now().millisecondsSinceEpoch}';
-                            });
-                          },
+                          onTap: _showImagePickerOptions,
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: const BoxDecoration(
@@ -114,7 +222,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _saveProfile,
+                    onPressed: _isLoading ? null : _saveProfile,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primaryColor,
                       foregroundColor: Colors.white,
@@ -134,6 +242,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
       ),
     );
+  }
+
+  ImageProvider _getProfileImage() {
+    if (_photoPath.startsWith('http')) {
+      return NetworkImage(_photoPath);
+    } else {
+      return FileImage(File(_photoPath));
+    }
   }
 
   Widget _buildTextField({
@@ -177,22 +293,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  void _saveProfile() {
+  void _saveProfile() async {
     if (_formKey.currentState!.validate()) {
-      Provider.of<UserProvider>(context, listen: false).updateUser(
+      setState(() => _isLoading = true);
+      await Provider.of<UserProvider>(context, listen: false).updateUser(
         _nameController.text,
         _emailController.text,
-        _photoUrl,
+        _photoPath,
       );
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Profil berhasil diperbarui'),
-          backgroundColor: AppTheme.primaryColor,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
-      Navigator.pop(context);
+      setState(() => _isLoading = false);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Profil berhasil diperbarui'),
+            backgroundColor: AppTheme.primaryColor,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+        Navigator.pop(context);
+      }
     }
   }
 }

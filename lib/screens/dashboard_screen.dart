@@ -1,11 +1,14 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:provider/provider.dart';
 import '../models/transaction.dart';
 import '../theme/app_theme.dart';
 import '../widgets/transaction_tile.dart';
 import 'notifications_screen.dart';
 import '../services/notification_service.dart';
+import '../providers/user_provider.dart';
 
 class DashboardScreen extends StatelessWidget {
   final List<Transaction> transactions;
@@ -17,8 +20,18 @@ class DashboardScreen extends StatelessWidget {
 
   final currencyFormatter = NumberFormat.currency(locale: 'id', symbol: 'Rp ', decimalDigits: 0);
 
+  ImageProvider _getProfileImage(String photoPath) {
+    if (photoPath.startsWith('http')) {
+      return NetworkImage(photoPath);
+    } else {
+      return FileImage(File(photoPath));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+
     return SafeArea(
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
@@ -31,22 +44,40 @@ class DashboardScreen extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  Row(
                     children: [
-                      Text(
-                        'Selamat Datang,',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.textSecondary,
-                          fontWeight: FontWeight.w500,
+                      Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppTheme.primaryColor.withOpacity(0.1), width: 1.5),
+                        ),
+                        child: CircleAvatar(
+                          radius: 20,
+                          backgroundColor: Colors.grey.shade100,
+                          backgroundImage: _getProfileImage(userProvider.profilePhoto),
                         ),
                       ),
-                      Text(
-                        'MoneyTrack',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.5,
-                        ),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Selamat Datang,',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppTheme.textSecondary,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            userProvider.name,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -61,13 +92,13 @@ class DashboardScreen extends StatelessWidget {
                           clipBehavior: Clip.none,
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(12),
+                              padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: const Color(0x1A9E9E9E)),
+                                color: Theme.of(context).cardTheme.color,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.black.withOpacity(0.05)),
                               ),
-                              child: const Icon(Icons.notifications_none_rounded, color: AppTheme.textPrimary, size: 24),
+                              child: const Icon(Icons.notifications_none_rounded, color: AppTheme.textPrimary, size: 22),
                             ),
                             if (NotificationService().unreadCount > 0)
                               Positioned(
@@ -237,9 +268,9 @@ class DashboardScreen extends StatelessWidget {
         minChildSize: 0.5,
         maxChildSize: 0.95,
         builder: (_, controller) => Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           ),
           child: Column(
             children: [
@@ -299,9 +330,9 @@ class DashboardScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0x149E9E9E)),
+        border: Border.all(color: Colors.black.withOpacity(0.05)),
         boxShadow: const [
           BoxShadow(
             color: Color(0x08000000), // black 3%
@@ -341,7 +372,7 @@ class DashboardScreen extends StatelessWidget {
               Expanded(
                 child: _buildSummaryItem(
                   icon: Icons.today_rounded,
-                  iconBgColor: const Color(0xFFFFF0F0),
+                  iconBgColor: AppTheme.expenseColor.withOpacity(0.1),
                   iconColor: AppTheme.expenseColor,
                   label: 'Pengeluaran\nHari Ini',
                   value: currencyFormatter.format(todayExpense),
@@ -349,14 +380,14 @@ class DashboardScreen extends StatelessWidget {
               ),
               Container(
                 width: 1, height: 52,
-                color: const Color(0x1A9E9E9E),
+                color: Colors.black.withOpacity(0.05),
                 margin: const EdgeInsets.symmetric(horizontal: 12),
               ),
               // Budget Tersisa
               Expanded(
                 child: _buildSummaryItem(
                   icon: Icons.account_balance_wallet_rounded,
-                  iconBgColor: const Color(0xFFE8F5E9),
+                  iconBgColor: AppTheme.incomeColor.withOpacity(0.1),
                   iconColor: AppTheme.incomeColor,
                   label: 'Budget\nTersisa',
                   value: currencyFormatter.format(budgetTersisa),
@@ -364,7 +395,7 @@ class DashboardScreen extends StatelessWidget {
               ),
               Container(
                 width: 1, height: 52,
-                color: const Color(0x1A9E9E9E),
+                color: Colors.black.withOpacity(0.05),
                 margin: const EdgeInsets.symmetric(horizontal: 12),
               ),
               // Target Tabungan
@@ -432,8 +463,8 @@ class DashboardScreen extends StatelessWidget {
       children: [
         Container(
           padding: const EdgeInsets.all(8),
-          decoration: const BoxDecoration(
-            color: Color(0xFFE8F0FE),
+          decoration: BoxDecoration(
+            color: const Color(0xFF4B6CF5).withOpacity(0.1),
             shape: BoxShape.circle,
           ),
           child: const Icon(Icons.savings_rounded, color: Color(0xFF4B6CF5), size: 16),
@@ -457,7 +488,7 @@ class DashboardScreen extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: progress,
                   minHeight: 6,
-                  backgroundColor: const Color(0xFFE8F0FE),
+                  backgroundColor: const Color(0xFF4B6CF5).withOpacity(0.1),
                   valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF4B6CF5)),
                 ),
               ),

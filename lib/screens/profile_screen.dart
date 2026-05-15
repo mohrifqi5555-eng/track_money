@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -41,6 +42,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     symbol: 'Rp ',
     decimalDigits: 0,
   );
+
+  ImageProvider _getProfileImage(String photoPath) {
+    if (photoPath.startsWith('http')) {
+      return NetworkImage(photoPath);
+    } else {
+      return FileImage(File(photoPath));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -192,7 +201,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             child: CircleAvatar(
               radius: 35,
-              backgroundImage: NetworkImage(user.profilePhoto),
+              backgroundColor: Colors.grey.shade200,
+              backgroundImage: _getProfileImage(user.profilePhoto),
             ),
           ),
         ),
