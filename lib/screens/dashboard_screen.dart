@@ -4,6 +4,8 @@ import 'package:animate_do/animate_do.dart';
 import '../models/transaction.dart';
 import '../theme/app_theme.dart';
 import '../widgets/transaction_tile.dart';
+import 'notifications_screen.dart';
+import '../services/notification_service.dart';
 
 class DashboardScreen extends StatelessWidget {
   final List<Transaction> transactions;
@@ -48,14 +50,47 @@ class DashboardScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0x1A9E9E9E)),
-                    ),
-                    child: const Icon(Icons.notifications_none_rounded, color: AppTheme.textPrimary, size: 24),
+                  ListenableBuilder(
+                    listenable: NotificationService(),
+                    builder: (context, child) {
+                      return GestureDetector(
+                        onTap: () {
+                          _showNotificationsBottomSheet(context);
+                        },
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: const Color(0x1A9E9E9E)),
+                              ),
+                              child: const Icon(Icons.notifications_none_rounded, color: AppTheme.textPrimary, size: 24),
+                            ),
+                            if (NotificationService().unreadCount > 0)
+                              Positioned(
+                                top: -2,
+                                right: -2,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: AppTheme.expenseColor,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                                  child: Text(
+                                    '${NotificationService().unreadCount}',
+                                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -187,6 +222,42 @@ class DashboardScreen extends StatelessWidget {
             ),
             const SizedBox(height: 100), // Spacing for FAB
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showNotificationsBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.8,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (_, controller) => Container(
+          decoration: const BoxDecoration(
+            color: Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: NotificationsScreen(scrollController: controller),
+              ),
+            ],
+          ),
         ),
       ),
     );

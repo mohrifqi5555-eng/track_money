@@ -7,10 +7,12 @@ import 'package:track_money/theme/app_theme.dart';
 import 'package:track_money/models/transaction.dart';
 
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:track_money/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('id', null);
+  await NotificationService().init();
   runApp(const MoneyTrackApp());
 }
 
@@ -59,6 +61,46 @@ class _MainScreenState extends State<MainScreen> {
     setState(() {
       _userTransactions.insert(0, newTx);
     });
+
+    // 1. Notifikasi transaksi baru
+    NotificationService().showNotification(
+      title: isIncome ? 'Pemasukan Berhasil' : 'Pengeluaran Berhasil',
+      body: 'Transaksi "$title" sebesar Rp ${amount.toInt()} telah dicatat.',
+      type: 'transaction',
+    );
+
+    // 2. Notifikasi pengeluaran besar (misal > 1.000.000)
+    if (!isIncome && amount >= 1000000) {
+      NotificationService().showNotification(
+        title: 'Pengeluaran Besar!',
+        body: 'Anda baru saja mencatat pengeluaran sebesar Rp ${amount.toInt()}. Tetap pantau budget Anda!',
+        type: 'alert',
+      );
+    }
+
+    // Hitung total untuk budget & tabungan
+    double totalInc = _userTransactions.where((tx) => tx.isIncome).fold(0, (sum, item) => sum + item.amount);
+    double totalExp = _userTransactions.where((tx) => !tx.isIncome).fold(0, (sum, item) => sum + item.amount);
+    double balance = totalInc - totalExp;
+
+    // 3. Notifikasi budget hampir habis (misal balance < 10% dari income)
+    if (totalInc > 0 && balance < (totalInc * 0.1) && !isIncome) {
+      NotificationService().showNotification(
+        title: 'Budget Menipis',
+        body: 'Saldo Anda tersisa Rp ${balance.toInt()}. Hati-hati dalam pengeluaran berikutnya.',
+        type: 'budget',
+      );
+    }
+
+    // 4. Notifikasi target tabungan tercapai (misal target = 30% dari income)
+    double savingsTarget = totalInc * 0.3;
+    if (totalInc > 0 && balance >= savingsTarget && isIncome) {
+       NotificationService().showNotification(
+        title: 'Target Tabungan Tercapai!',
+        body: 'Selamat! Tabungan Anda telah mencapai target 30% dari total pemasukan.',
+        type: 'saving',
+      );
+    }
   }
 
   void _deleteTransaction(String id) {
