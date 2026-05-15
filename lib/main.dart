@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:track_money/screens/dashboard_screen.dart';
 import 'package:track_money/screens/history_screen.dart';
 import 'package:track_money/screens/add_transaction_screen.dart';
 import 'package:track_money/theme/app_theme.dart';
 import 'package:track_money/models/transaction.dart';
 import 'package:track_money/screens/reports_screen.dart';
+import 'package:track_money/screens/profile_screen.dart';
+import 'package:track_money/providers/theme_provider.dart';
+import 'package:track_money/providers/user_provider.dart';
+import 'package:track_money/providers/settings_provider.dart';
+import 'package:track_money/providers/savings_provider.dart';
+import 'package:track_money/screens/lock_screen.dart';
 
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:track_money/services/notification_service.dart';
@@ -14,7 +21,17 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('id', null);
   await NotificationService().init();
-  runApp(const MoneyTrackApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => SettingsProvider()),
+        ChangeNotifierProvider(create: (_) => SavingsProvider()),
+      ],
+      child: const MoneyTrackApp(),
+    ),
+  );
 }
 
 class MoneyTrackApp extends StatelessWidget {
@@ -22,11 +39,16 @@ class MoneyTrackApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final settingsProvider = Provider.of<SettingsProvider>(context);
+    
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'MoneyTrack',
       theme: AppTheme.lightTheme,
-      home: const MainScreen(),
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      home: settingsProvider.isLocked ? const LockScreen() : const MainScreen(),
     );
   }
 }
@@ -48,7 +70,6 @@ class _MainScreenState extends State<MainScreen> {
     Transaction(id: 't4', title: 'Desain Freelance', amount: 2000000, isIncome: true, date: DateTime.now().subtract(const Duration(days: 2))),
     Transaction(id: 't5', title: 'Tagihan Internet', amount: 350000, isIncome: false, date: DateTime.now().subtract(const Duration(days: 3))),
   ];
-  // stray entries removed
 
   void _addNewTransaction(String title, double amount, bool isIncome, DateTime date) {
     final newTx = Transaction(
@@ -63,43 +84,17 @@ class _MainScreenState extends State<MainScreen> {
       _userTransactions.insert(0, newTx);
     });
 
-    // 1. Notifikasi transaksi baru
     NotificationService().showNotification(
       title: isIncome ? 'Pemasukan Berhasil' : 'Pengeluaran Berhasil',
       body: 'Transaksi "$title" sebesar Rp ${amount.toInt()} telah dicatat.',
       type: 'transaction',
     );
 
-    // 2. Notifikasi pengeluaran besar (misal > 1.000.000)
     if (!isIncome && amount >= 1000000) {
       NotificationService().showNotification(
         title: 'Pengeluaran Besar!',
         body: 'Anda baru saja mencatat pengeluaran sebesar Rp ${amount.toInt()}. Tetap pantau budget Anda!',
         type: 'alert',
-      );
-    }
-
-    // Hitung total untuk budget & tabungan
-    double totalInc = _userTransactions.where((tx) => tx.isIncome).fold(0, (sum, item) => sum + item.amount);
-    double totalExp = _userTransactions.where((tx) => !tx.isIncome).fold(0, (sum, item) => sum + item.amount);
-    double balance = totalInc - totalExp;
-
-    // 3. Notifikasi budget hampir habis (misal balance < 10% dari income)
-    if (totalInc > 0 && balance < (totalInc * 0.1) && !isIncome) {
-      NotificationService().showNotification(
-        title: 'Budget Menipis',
-        body: 'Saldo Anda tersisa Rp ${balance.toInt()}. Hati-hati dalam pengeluaran berikutnya.',
-        type: 'budget',
-      );
-    }
-
-    // 4. Notifikasi target tabungan tercapai (misal target = 30% dari income)
-    double savingsTarget = totalInc * 0.3;
-    if (totalInc > 0 && balance >= savingsTarget && isIncome) {
-       NotificationService().showNotification(
-        title: 'Target Tabungan Tercapai!',
-        body: 'Selamat! Tabungan Anda telah mencapai target 30% dari total pemasukan.',
-        type: 'saving',
       );
     }
   }
@@ -116,7 +111,7 @@ class _MainScreenState extends State<MainScreen> {
       DashboardScreen(transactions: _userTransactions),
       HistoryScreen(transactions: _userTransactions, deleteTx: _deleteTransaction),
       ReportsScreen(transactions: _userTransactions),
-      const Center(child: Text('Pengaturan Profil', style: TextStyle(fontWeight: FontWeight.bold))),
+      ProfileScreen(transactions: _userTransactions),
     ];
 
     return Scaffold(
@@ -141,12 +136,14 @@ class _MainScreenState extends State<MainScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: Color(0x08000000), // black 3%
+              color: Theme.of(context).brightness == Brightness.light 
+                ? const Color(0x08000000) 
+                : Colors.black.withOpacity(0.2),
               blurRadius: 10,
-              offset: Offset(0, -5),
+              offset: const Offset(0, -5),
             ),
           ],
         ),
@@ -154,7 +151,7 @@ class _MainScreenState extends State<MainScreen> {
           currentIndex: _currentIndex,
           onTap: (index) => setState(() => _currentIndex = index),
           type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(context).cardTheme.color,
           selectedItemColor: AppTheme.primaryColor,
           unselectedItemColor: const Color(0xFF94A3B8),
           showSelectedLabels: true,

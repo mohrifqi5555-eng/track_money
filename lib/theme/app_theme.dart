@@ -75,6 +75,72 @@ class AppTheme {
     );
   }
 
+  static ThemeData get darkTheme {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primaryColor,
+        brightness: Brightness.dark,
+        primary: primaryColor,
+        secondary: accentColor,
+        surface: const Color(0xFF0F172A),
+      ),
+      scaffoldBackgroundColor: const Color(0xFF020617),
+      textTheme: GoogleFonts.outfitTextTheme(ThemeData.dark().textTheme).copyWith(
+        displayLarge: GoogleFonts.outfit(
+          fontSize: 32,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+          letterSpacing: -1,
+        ),
+        headlineSmall: GoogleFonts.outfit(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+          letterSpacing: -0.5,
+        ),
+        titleLarge: GoogleFonts.outfit(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+          letterSpacing: -0.5,
+        ),
+        titleMedium: GoogleFonts.outfit(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+        bodyMedium: GoogleFonts.outfit(
+          fontSize: 16,
+          color: const Color(0xFFF1F5F9),
+        ),
+        bodySmall: GoogleFonts.outfit(
+          fontSize: 14,
+          color: const Color(0xFF94A3B8),
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: const Color(0xFF1E293B),
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0x1FFFFFFF)),
+        ),
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
   static BoxDecoration gradientDecoration = const BoxDecoration(
     gradient: LinearGradient(
       colors: [primaryColor, Color(0xCC059669)],
