@@ -5,14 +5,16 @@ import 'package:track_money/screens/dashboard_screen.dart';
 import 'package:track_money/screens/history_screen.dart';
 import 'package:track_money/screens/add_transaction_screen.dart';
 import 'package:track_money/theme/app_theme.dart';
-import 'package:track_money/models/transaction.dart';
 import 'package:track_money/screens/reports_screen.dart';
 import 'package:track_money/screens/profile_screen.dart';
 import 'package:track_money/providers/theme_provider.dart';
 import 'package:track_money/providers/user_provider.dart';
 import 'package:track_money/providers/settings_provider.dart';
 import 'package:track_money/providers/savings_provider.dart';
+import 'package:track_money/providers/auth_provider.dart';
+import 'package:track_money/providers/transaction_provider.dart';
 import 'package:track_money/screens/lock_screen.dart';
+import 'package:track_money/screens/login_screen.dart';
 
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:track_money/services/notification_service.dart';
@@ -25,9 +27,23 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProvider(create: (_) => UserProvider()),
-        ChangeNotifierProvider(create: (_) => SettingsProvider()),
-        ChangeNotifierProvider(create: (_) => SavingsProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, UserProvider>(
+          create: (_) => UserProvider(),
+          update: (_, auth, user) => user!..updateAuth(auth),
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, SavingsProvider>(
+          create: (_) => SavingsProvider(),
+          update: (_, auth, savings) => savings!..updateAccountId(auth.currentAccount?.id),
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, SettingsProvider>(
+          create: (_) => SettingsProvider(),
+          update: (_, auth, settings) => settings!..updateAccountId(auth.currentAccount?.id),
+        ),
+        ChangeNotifierProxyProvider<AuthProvider, TransactionProvider>(
+          create: (_) => TransactionProvider(),
+          update: (_, auth, txs) => txs!..updateAccountId(auth.currentAccount?.id),
+        ),
       ],
       child: const MoneyTrackApp(),
     ),
@@ -40,6 +56,7 @@ class MoneyTrackApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context);
     final settingsProvider = Provider.of<SettingsProvider>(context);
     
     return MaterialApp(
@@ -48,7 +65,17 @@ class MoneyTrackApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      home: settingsProvider.isLocked ? const LockScreen() : const MainScreen(),
+      home: authProvider.isLoading
+          ? const Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(color: AppTheme.primaryColor),
+              ),
+            )
+          : !authProvider.isAuthenticated
+              ? const LoginScreen()
+              : settingsProvider.isLocked
+                  ? const LockScreen()
+                  : const MainScreen(),
     );
   }
 }
@@ -63,49 +90,13 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  final List<Transaction> _userTransactions = [];
-
-  void _addNewTransaction(String title, double amount, bool isIncome, DateTime date) {
-    final newTx = Transaction(
-      id: DateTime.now().toString(),
-      title: title,
-      amount: amount,
-      isIncome: isIncome,
-      date: date,
-    );
-
-    setState(() {
-      _userTransactions.insert(0, newTx);
-    });
-
-    NotificationService().showNotification(
-      title: isIncome ? 'Pemasukan Berhasil' : 'Pengeluaran Berhasil',
-      body: 'Transaksi "$title" sebesar Rp ${amount.toInt()} telah dicatat.',
-      type: 'transaction',
-    );
-
-    if (!isIncome && amount >= 1000000) {
-      NotificationService().showNotification(
-        title: 'Pengeluaran Besar!',
-        body: 'Anda baru saja mencatat pengeluaran sebesar Rp ${amount.toInt()}. Tetap pantau budget Anda!',
-        type: 'alert',
-      );
-    }
-  }
-
-  void _deleteTransaction(String id) {
-    setState(() {
-      _userTransactions.removeWhere((tx) => tx.id == id);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
-      DashboardScreen(transactions: _userTransactions),
-      HistoryScreen(transactions: _userTransactions, deleteTx: _deleteTransaction),
-      ReportsScreen(transactions: _userTransactions),
-      ProfileScreen(transactions: _userTransactions),
+      const DashboardScreen(),
+      const HistoryScreen(),
+      const ReportsScreen(),
+      const ProfileScreen(),
     ];
 
     return Scaffold(
@@ -118,7 +109,7 @@ class _MainScreenState extends State<MainScreen> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => AddTransactionScreen(addTx: _addNewTransaction),
+                builder: (context) => const AddTransactionScreen(),
               ),
             );
           },

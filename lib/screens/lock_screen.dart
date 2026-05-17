@@ -71,7 +71,6 @@ class _LockScreenState extends State<LockScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = Provider.of<SettingsProvider>(context);
 
     return Scaffold(
       backgroundColor: AppTheme.primaryColor,

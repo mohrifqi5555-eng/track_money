@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
+import '../providers/transaction_provider.dart';
+import '../models/transaction.dart';
+import '../services/notification_service.dart';
 
 class AddTransactionScreen extends StatefulWidget {
-  final Function(String, double, bool, DateTime) addTx;
-  const AddTransactionScreen({Key? key, required this.addTx}) : super(key: key);
+  const AddTransactionScreen({Key? key}) : super(key: key);
 
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
@@ -22,7 +25,30 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final enteredAmount = double.tryParse(_amountController.text);
     if (enteredAmount == null || enteredAmount <= 0) return;
 
-    widget.addTx(_titleController.text, enteredAmount, _isIncome, _selectedDate);
+    final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+    final newTx = Transaction(
+      id: DateTime.now().toString(),
+      title: _titleController.text,
+      amount: enteredAmount,
+      isIncome: _isIncome,
+      date: _selectedDate,
+    );
+    transactionProvider.addTransaction(newTx);
+
+    NotificationService().showNotification(
+      title: _isIncome ? 'Pemasukan Berhasil' : 'Pengeluaran Berhasil',
+      body: 'Transaksi "${_titleController.text}" sebesar Rp ${enteredAmount.toInt()} telah dicatat.',
+      type: 'transaction',
+    );
+
+    if (!_isIncome && enteredAmount >= 1000000) {
+      NotificationService().showNotification(
+        title: 'Pengeluaran Besar!',
+        body: 'Anda baru saja mencatat pengeluaran sebesar Rp ${enteredAmount.toInt()}. Tetap pantau budget Anda!',
+        type: 'alert',
+      );
+    }
+
     Navigator.of(context).pop();
   }
 

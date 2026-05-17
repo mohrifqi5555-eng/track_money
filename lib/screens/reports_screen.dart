@@ -9,11 +9,10 @@ import 'package:provider/provider.dart';
 import '../models/transaction.dart';
 import '../theme/app_theme.dart';
 import '../providers/user_provider.dart';
+import '../providers/transaction_provider.dart';
 
 class ReportsScreen extends StatefulWidget {
-  final List<Transaction> transactions;
-
-  const ReportsScreen({super.key, required this.transactions});
+  const ReportsScreen({super.key});
 
   @override
   State<ReportsScreen> createState() => _ReportsScreenState();
@@ -27,7 +26,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
-    final filteredTransactions = _getFilteredTransactions();
+    final transactionProvider = Provider.of<TransactionProvider>(context);
+    final transactions = transactionProvider.transactions;
+    final filteredTransactions = _getFilteredTransactions(transactions);
     final totalIncome = filteredTransactions.where((tx) => tx.isIncome).fold(0.0, (sum, item) => sum + item.amount);
     final totalExpense = filteredTransactions.where((tx) => !tx.isIncome).fold(0.0, (sum, item) => sum + item.amount);
     final totalBalance = userProvider.initialBalance + totalIncome - totalExpense;
@@ -526,8 +527,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  List<Transaction> _getFilteredTransactions() {
-    return widget.transactions.where((tx) {
+  List<Transaction> _getFilteredTransactions(List<Transaction> allTransactions) {
+    return allTransactions.where((tx) {
       if (_selectedPeriod == 'Mingguan') {
         return tx.date.isAfter(DateTime.now().subtract(const Duration(days: 7)));
       } else if (_selectedPeriod == 'Bulanan') {

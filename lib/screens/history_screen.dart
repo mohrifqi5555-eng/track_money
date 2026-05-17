@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
-import '../models/transaction.dart';
 import '../theme/app_theme.dart';
 import '../widgets/transaction_tile.dart';
 
+import 'package:provider/provider.dart';
+import '../providers/transaction_provider.dart';
+
 class HistoryScreen extends StatefulWidget {
-  final List<Transaction> transactions;
-  final Function(String) deleteTx;
-  const HistoryScreen({super.key, required this.transactions, required this.deleteTx});
+  const HistoryScreen({super.key});
 
   @override
   State<HistoryScreen> createState() => _HistoryScreenState();
@@ -16,14 +16,16 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   String _filter = 'Semua';
 
-  List<Transaction> get _filteredTransactions {
-    if (_filter == 'Pemasukan') return widget.transactions.where((tx) => tx.isIncome).toList();
-    if (_filter == 'Pengeluaran') return widget.transactions.where((tx) => !tx.isIncome).toList();
-    return widget.transactions;
-  }
-
   @override
   Widget build(BuildContext context) {
+    final transactionProvider = Provider.of<TransactionProvider>(context);
+    final transactions = transactionProvider.transactions;
+    final filteredTransactions = _filter == 'Pemasukan'
+        ? transactions.where((tx) => tx.isIncome).toList()
+        : _filter == 'Pengeluaran'
+            ? transactions.where((tx) => !tx.isIncome).toList()
+            : transactions;
+
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -59,29 +61,29 @@ class _HistoryScreenState extends State<HistoryScreen> {
             const SizedBox(height: 16),
 
             Expanded(
-              child: _filteredTransactions.isEmpty
+              child: filteredTransactions.isEmpty
                   ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.receipt_long_rounded, size: 80, color: Colors.grey.withValues(alpha: 0.2)),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Tidak ada transaksi',
-                            style: TextStyle(
-                              color: Colors.grey.withValues(alpha: 0.5), 
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
+                       child: Column(
+                         mainAxisAlignment: MainAxisAlignment.center,
+                         children: [
+                           Icon(Icons.receipt_long_rounded, size: 80, color: Colors.grey.withOpacity(0.2)),
+                           const SizedBox(height: 16),
+                           Text(
+                             'Tidak ada transaksi',
+                             style: TextStyle(
+                               color: Colors.grey.withOpacity(0.5), 
+                               fontSize: 16,
+                               fontWeight: FontWeight.w500,
+                             ),
+                           ),
+                         ],
+                       ),
+                     )
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      itemCount: _filteredTransactions.length,
+                      itemCount: filteredTransactions.length,
                       itemBuilder: (context, index) {
-                        final tx = _filteredTransactions[index];
+                        final tx = filteredTransactions[index];
                         return FadeInRight(
                           delay: Duration(milliseconds: 50 * index),
                           child: Dismissible(
@@ -98,7 +100,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               child: const Icon(Icons.delete_outline_rounded, color: AppTheme.expenseColor, size: 28),
                             ),
                             onDismissed: (direction) {
-                              widget.deleteTx(tx.id);
+                              transactionProvider.deleteTransaction(tx.id);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text('${tx.title} dihapus', style: const TextStyle(fontWeight: FontWeight.w500)),

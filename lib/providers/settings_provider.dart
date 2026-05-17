@@ -9,21 +9,26 @@ class SettingsProvider with ChangeNotifier {
   bool _biometricEnabled = false;
   String _pin = '';
   bool _isLocked = false;
+  String? _accountId;
 
   bool get notificationsEnabled => _notificationsEnabled;
   bool get biometricEnabled => _biometricEnabled;
   String get pin => _pin;
   bool get isLocked => _isLocked;
 
-  SettingsProvider() {
-    _loadSettings();
+  void updateAccountId(String? accountId) {
+    if (_accountId != accountId) {
+      _accountId = accountId;
+      _loadSettings();
+    }
   }
 
   void toggleNotifications(bool value) async {
     _notificationsEnabled = value;
     notifyListeners();
+    if (_accountId == null) return;
     final prefs = await SharedPreferences.getInstance();
-    prefs.setBool('notificationsEnabled', _notificationsEnabled);
+    prefs.setBool('${_accountId}_notificationsEnabled', _notificationsEnabled);
   }
 
   Future<bool> toggleBiometric(bool value) async {
@@ -51,16 +56,18 @@ class SettingsProvider with ChangeNotifier {
 
     _biometricEnabled = value;
     notifyListeners();
+    if (_accountId == null) return true;
     final prefs = await SharedPreferences.getInstance();
-    prefs.setBool('biometricEnabled', _biometricEnabled);
+    prefs.setBool('${_accountId}_biometricEnabled', _biometricEnabled);
     return true;
   }
 
   void setPin(String value) async {
     _pin = value;
     notifyListeners();
+    if (_accountId == null) return;
     final prefs = await SharedPreferences.getInstance();
-    prefs.setString('pin', _pin);
+    prefs.setString('${_accountId}_pin', _pin);
   }
 
   void setLocked(bool value) {
@@ -80,14 +87,25 @@ class SettingsProvider with ChangeNotifier {
   }
 
   void _loadSettings() async {
+    if (_accountId == null) {
+      _notificationsEnabled = true;
+      _biometricEnabled = false;
+      _pin = '';
+      _isLocked = false;
+      notifyListeners();
+      return;
+    }
+
     final prefs = await SharedPreferences.getInstance();
-    _notificationsEnabled = prefs.getBool('notificationsEnabled') ?? true;
-    _biometricEnabled = prefs.getBool('biometricEnabled') ?? false;
-    _pin = prefs.getString('pin') ?? '';
+    _notificationsEnabled = prefs.getBool('${_accountId}_notificationsEnabled') ?? true;
+    _biometricEnabled = prefs.getBool('${_accountId}_biometricEnabled') ?? false;
+    _pin = prefs.getString('${_accountId}_pin') ?? '';
     
     // Lock the app on start if PIN or Biometric is enabled
     if (_pin.isNotEmpty || _biometricEnabled) {
       _isLocked = true;
+    } else {
+      _isLocked = false;
     }
     
     notifyListeners();

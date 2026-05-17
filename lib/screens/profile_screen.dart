@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
-import '../models/transaction.dart';
 import 'package:intl/intl.dart';
 import 'package:animate_do/animate_do.dart';
 import '../providers/theme_provider.dart';
 import '../providers/user_provider.dart';
 import '../providers/settings_provider.dart';
+import '../providers/transaction_provider.dart';
 import 'edit_profile_screen.dart';
 import 'security_screen.dart';
 import 'savings_target_screen.dart';
@@ -16,27 +16,17 @@ import 'help_screen.dart';
 import 'about_screen.dart';
 import 'login_screen.dart';
 import 'reports_screen.dart';
+import 'account_selection_screen.dart';
+import '../providers/auth_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
-  final List<Transaction> transactions;
-
-  const ProfileScreen({Key? key, required this.transactions}) : super(key: key);
+  const ProfileScreen({Key? key}) : super(key: key);
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  double get totalIncome => widget.transactions
-      .where((tx) => tx.isIncome)
-      .fold(0, (sum, item) => sum + item.amount);
-
-  double get totalExpense => widget.transactions
-      .where((tx) => !tx.isIncome)
-      .fold(0, (sum, item) => sum + item.amount);
-
-  double get balance => totalIncome - totalExpense;
-
   final currencyFormat = NumberFormat.currency(
     locale: 'id_ID',
     symbol: 'Rp ',
@@ -56,6 +46,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final userProvider = Provider.of<UserProvider>(context);
     final settingsProvider = Provider.of<SettingsProvider>(context);
+    final transactionProvider = Provider.of<TransactionProvider>(context);
+    final transactions = transactionProvider.transactions;
+
+    final totalIncome = transactions.where((tx) => tx.isIncome).fold(0.0, (sum, item) => sum + item.amount);
+    final totalExpense = transactions.where((tx) => !tx.isIncome).fold(0.0, (sum, item) => sum + item.amount);
+    final balance = totalIncome - totalExpense;
 
     return Scaffold(
       body: SafeArea(
@@ -73,7 +69,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 24),
               FadeInUp(
                 duration: const Duration(milliseconds: 600),
-                child: _buildBalanceCard(),
+                child: _buildBalanceCard(totalIncome, totalExpense, balance),
               ),
               const SizedBox(height: 32),
               FadeInUp(
@@ -90,6 +86,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+                        ),
+                      ),
+                      _buildMenuItem(
+                        icon: Icons.people_outline_rounded,
+                        title: 'Beralih Akun',
+                        subtitle: 'Pindah ke akun tersimpan',
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const AccountSelectionScreen()),
                         ),
                       ),
                       _buildMenuToggle(
@@ -140,7 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         subtitle: 'Analisis pengeluaran bulanan',
                         onTap: () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => ReportsScreen(transactions: widget.transactions)),
+                          MaterialPageRoute(builder: (context) => const ReportsScreen()),
                         ),
                       ),
                     ]),
@@ -253,7 +258,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildBalanceCard() {
+  Widget _buildBalanceCard(double totalIncome, double totalExpense, double balance) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -473,25 +478,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildLogoutButton(UserProvider user) {
-    return SizedBox(
-      width: double.infinity,
-      child: TextButton.icon(
-        onPressed: () => _showLogoutDialog(context, user),
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          backgroundColor: AppTheme.expenseColor.withOpacity(0.1),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        ),
-        icon: const Icon(Icons.logout_rounded, color: AppTheme.expenseColor, size: 20),
-        label: Text(
-          'Keluar Akun',
-          style: GoogleFonts.outfit(
-            color: AppTheme.expenseColor,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: TextButton.icon(
+            onPressed: () => _showLogoutDialog(context, user),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: AppTheme.expenseColor.withOpacity(0.1),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            icon: const Icon(Icons.logout_rounded, color: AppTheme.expenseColor, size: 20),
+            label: Text(
+              'Keluar Akun',
+              style: GoogleFonts.outfit(
+                color: AppTheme.expenseColor,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ),
-      ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: TextButton.icon(
+            onPressed: () => _showDeleteAccountDialog(context),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: Colors.red.withOpacity(0.05),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Colors.red.withOpacity(0.2)),
+              ),
+            ),
+            icon: const Icon(Icons.delete_forever_rounded, color: Colors.red, size: 20),
+            label: Text(
+              'Hapus Akun Ini',
+              style: GoogleFonts.outfit(
+                color: Colors.red,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -508,16 +541,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           TextButton(
             onPressed: () async {
+              Navigator.of(context).pop();
               await user.logout();
-              if (mounted) {
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginScreen()),
-                  (route) => false,
-                );
-              }
             },
             child: const Text('Keluar', style: TextStyle(color: AppTheme.expenseColor)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteAccountDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+          'Hapus Akun',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.red),
+        ),
+        content: Text(
+          'Apakah Anda yakin ingin menghapus akun ini secara permanen? Semua data transaksi, target tabungan, dan pengaturan Anda akan dihapus selamanya dan tidak dapat dikembalikan.',
+          style: GoogleFonts.outfit(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text('Batal', style: GoogleFonts.outfit(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () async {
+              final authProvider = Provider.of<AuthProvider>(context, listen: false);
+              final activeAccountId = authProvider.currentAccount?.id;
+              
+              if (activeAccountId != null) {
+                Navigator.pop(dialogContext);
+                await authProvider.deleteAccount(activeAccountId);
+                
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Akun berhasil dihapus permanen.', style: GoogleFonts.outfit(color: Colors.white)),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  );
+                }
+              }
+            },
+            child: Text(
+              'Ya, Hapus',
+              style: GoogleFonts.outfit(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),

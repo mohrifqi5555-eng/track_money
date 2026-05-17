@@ -6,12 +6,16 @@ import '../models/savings_target.dart';
 class SavingsProvider with ChangeNotifier {
   List<SavingsTarget> _targets = [];
   bool _isLoading = false;
+  String? _accountId;
 
   List<SavingsTarget> get targets => _targets;
   bool get isLoading => _isLoading;
 
-  SavingsProvider() {
-    _loadTargets();
+  void updateAccountId(String? accountId) {
+    if (_accountId != accountId) {
+      _accountId = accountId;
+      _loadTargets();
+    }
   }
 
   Future<void> addTarget(SavingsTarget target) async {
@@ -36,17 +40,24 @@ class SavingsProvider with ChangeNotifier {
   }
 
   Future<void> _saveTargets() async {
+    if (_accountId == null) return;
     final prefs = await SharedPreferences.getInstance();
     final String encodedData = jsonEncode(_targets.map((t) => t.toMap()).toList());
-    await prefs.setString('savings_targets', encodedData);
+    await prefs.setString('savings_targets_$_accountId', encodedData);
   }
 
   Future<void> _loadTargets() async {
+    if (_accountId == null) {
+      _targets = [];
+      notifyListeners();
+      return;
+    }
+
     _isLoading = true;
     notifyListeners();
     
     final prefs = await SharedPreferences.getInstance();
-    final String? encodedData = prefs.getString('savings_targets');
+    final String? encodedData = prefs.getString('savings_targets_$_accountId');
     
     if (encodedData != null) {
       final List<dynamic> decodedData = jsonDecode(encodedData);

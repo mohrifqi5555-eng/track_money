@@ -286,6 +286,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
           validator: (value) {
             if (value == null || value.isEmpty) return 'Field ini tidak boleh kosong';
+            if (label == 'Email') {
+              final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+              if (!emailRegex.hasMatch(value)) {
+                return 'Masukkan email yang valid';
+              }
+            }
             return null;
           },
         ),

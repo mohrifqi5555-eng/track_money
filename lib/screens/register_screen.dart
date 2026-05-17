@@ -3,26 +3,25 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
-import 'register_screen.dart';
-import 'account_selection_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({Key? key}) : super(key: key);
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
-  bool _rememberMe = true;
   bool _isLoading = false;
 
   @override
   void dispose() {
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -34,10 +33,10 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final error = await authProvider.login(
+    final error = await authProvider.register(
+      _usernameController.text.trim(),
       _emailController.text.trim(),
       _passwordController.text,
-      rememberMe: _rememberMe,
     );
 
     setState(() => _isLoading = false);
@@ -54,47 +53,35 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Login berhasil!', style: GoogleFonts.outfit(color: Colors.white)),
+          content: Text('Registrasi berhasil!', style: GoogleFonts.outfit(color: Colors.white)),
           backgroundColor: AppTheme.primaryColor,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
+      Navigator.pop(context); // Go back to login screen
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-    final savedAccounts = authProvider.accounts;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: isDark ? Colors.white : AppTheme.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 40),
-              // Logo/Header
-              Center(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.account_balance_wallet_rounded,
-                    size: 64,
-                    color: AppTheme.primaryColor,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
               Text(
-                'Selamat Datang Kembali',
+                'Buat Akun Baru',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
                   fontSize: 28,
@@ -104,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Masuk untuk mengelola keuangan Anda dengan mudah',
+                'Mulai perjalanan pelacakan keuangan Anda bersama MoneyTrack',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.outfit(
                   fontSize: 14,
@@ -117,6 +104,35 @@ class _LoginScreenState extends State<LoginScreen> {
                 key: _formKey,
                 child: Column(
                   children: [
+                    // Username
+                    TextFormField(
+                      controller: _usernameController,
+                      style: GoogleFonts.outfit(),
+                      decoration: InputDecoration(
+                        labelText: 'Username',
+                        labelStyle: GoogleFonts.outfit(),
+                        prefixIcon: const Icon(Icons.person_outline_rounded, color: AppTheme.primaryColor),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: isDark ? Colors.grey[800]! : Colors.grey[300]!),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(color: isDark ? Colors.grey[800]! : Colors.grey[300]!),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Username tidak boleh kosong';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20),
                     // Email
                     TextFormField(
                       controller: _emailController,
@@ -194,35 +210,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              const SizedBox(height: 12),
-              // Remember Me Checkbox
-              Row(
-                children: [
-                  SizedBox(
-                    height: 24,
-                    width: 24,
-                    child: Checkbox(
-                      value: _rememberMe,
-                      activeColor: AppTheme.primaryColor,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                      onChanged: (value) {
-                        setState(() => _rememberMe = value ?? true);
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Ingat Saya',
-                    style: GoogleFonts.outfit(
-                      fontSize: 14,
-                      color: isDark ? Colors.grey[300] : AppTheme.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 32),
-              // Login Button
+              const SizedBox(height: 40),
+              // Register Button
               ElevatedButton(
                 onPressed: _isLoading ? null : _submit,
                 style: ElevatedButton.styleFrom(
@@ -241,54 +230,24 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                       )
                     : Text(
-                        'Masuk',
+                        'Daftar',
                         style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
               ),
 
               const SizedBox(height: 24),
-              // Switch Account Option if exists
-              if (savedAccounts.isNotEmpty) ...[
-                OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const AccountSelectionScreen()),
-                    );
-                  },
-                  icon: const Icon(Icons.people_outline_rounded, color: AppTheme.primaryColor),
-                  label: Text(
-                    'Pilih Akun Tersimpan (${savedAccounts.length})',
-                    style: GoogleFonts.outfit(color: AppTheme.primaryColor, fontWeight: FontWeight.w600),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    side: const BorderSide(color: AppTheme.primaryColor, width: 1.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-              ],
-
-              // Link to Register
+              // Link to Login
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Belum punya akun? ',
+                    'Sudah punya akun? ',
                     style: GoogleFonts.outfit(color: isDark ? Colors.grey[400] : AppTheme.textSecondary),
                   ),
                   GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const RegisterScreen()),
-                      );
-                    },
+                    onTap: () => Navigator.pop(context),
                     child: Text(
-                      'Daftar Sekarang',
+                      'Masuk di sini',
                       style: GoogleFonts.outfit(
                         color: AppTheme.primaryColor,
                         fontWeight: FontWeight.bold,

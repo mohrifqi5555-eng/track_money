@@ -1,67 +1,45 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as path;
+import 'auth_provider.dart';
 
 class UserProvider with ChangeNotifier {
-  String _name = 'M. Rifqi';
-  String _email = 'rifqi@example.com';
-  String _profilePhoto = 'https://i.pravatar.cc/150?u=moneytrack';
-  double _initialBalance = 0.0;
+  AuthProvider? _authProvider;
 
-  String get name => _name;
-  String get email => _email;
-  String get profilePhoto => _profilePhoto;
-  double get initialBalance => _initialBalance;
-
-  UserProvider() {
-    _loadUser();
+  void updateAuth(AuthProvider authProvider) {
+    _authProvider = authProvider;
+    notifyListeners();
   }
 
-  Future<void> updateUser(String name, String email, String photo) async {
-    _name = name;
-    _email = email;
-    _profilePhoto = photo;
-    notifyListeners();
+  String get name => _authProvider?.currentAccount?.username ?? 'M. Rifqi';
+  String get email => _authProvider?.currentAccount?.email ?? 'rifqi@example.com';
+  String get profilePhoto => _authProvider?.currentAccount?.profilePhoto ?? 'https://i.pravatar.cc/150?u=moneytrack';
+  double get initialBalance => _authProvider?.currentAccount?.initialBalance ?? 0.0;
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('userName', _name);
-    await prefs.setString('userEmail', _email);
-    await prefs.setString('userPhoto', _profilePhoto);
+  Future<void> updateUser(String name, String email, String photo) async {
+    if (_authProvider != null) {
+      await _authProvider!.updateProfile(name, email, photo);
+      notifyListeners();
+    }
   }
 
   Future<void> updateInitialBalance(double balance) async {
-    _initialBalance = balance;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('initialBalance', _initialBalance);
+    if (_authProvider != null) {
+      await _authProvider!.updateInitialBalance(balance);
+      notifyListeners();
+    }
   }
 
   Future<String> saveImageLocally(File imageFile) async {
-    final directory = await getApplicationDocumentsDirectory();
-    final fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}${path.extension(imageFile.path)}';
-    final savedImage = await imageFile.copy('${directory.path}/$fileName');
-    return savedImage.path;
-  }
-
-  void _loadUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    _name = prefs.getString('userName') ?? 'M. Rifqi';
-    _email = prefs.getString('userEmail') ?? 'rifqi@example.com';
-    _profilePhoto = prefs.getString('userPhoto') ?? 'https://i.pravatar.cc/150?u=moneytrack';
-    _initialBalance = prefs.getDouble('initialBalance') ?? 0.0;
-    notifyListeners();
+    if (_authProvider != null) {
+      return await _authProvider!.saveImageLocally(imageFile);
+    }
+    return '';
   }
 
   Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-    // Reset local state
-    _name = 'M. Rifqi';
-    _email = 'rifqi@example.com';
-    _profilePhoto = 'https://i.pravatar.cc/150?u=moneytrack';
-    _initialBalance = 0.0;
-    notifyListeners();
+    if (_authProvider != null) {
+      await _authProvider!.logout();
+      notifyListeners();
+    }
   }
 }

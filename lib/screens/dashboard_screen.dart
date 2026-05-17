@@ -11,14 +11,12 @@ import 'notifications_screen.dart';
 import '../services/notification_service.dart';
 import '../providers/user_provider.dart';
 
+import '../providers/transaction_provider.dart';
+
 class DashboardScreen extends StatelessWidget {
-  final List<Transaction> transactions;
-  DashboardScreen({super.key, required this.transactions});
+  const DashboardScreen({super.key});
 
-  double get totalIncome => transactions.where((tx) => tx.isIncome).fold(0, (sum, item) => sum + item.amount);
-  double get totalExpense => transactions.where((tx) => !tx.isIncome).fold(0, (sum, item) => sum + item.amount);
-
-  final currencyFormatter = NumberFormat.currency(locale: 'id', symbol: 'Rp ', decimalDigits: 0);
+  static final currencyFormatter = NumberFormat.currency(locale: 'id', symbol: 'Rp ', decimalDigits: 0);
 
   ImageProvider _getProfileImage(String photoPath) {
     if (photoPath.startsWith('http')) {
@@ -31,6 +29,10 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
+    final transactionProvider = Provider.of<TransactionProvider>(context);
+    final transactions = transactionProvider.transactions;
+    final totalIncome = transactions.where((tx) => tx.isIncome).fold(0.0, (sum, item) => sum + item.amount);
+    final totalExpense = transactions.where((tx) => !tx.isIncome).fold(0.0, (sum, item) => sum + item.amount);
     final totalBalance = userProvider.initialBalance + totalIncome - totalExpense;
 
     return SafeArea(
@@ -220,7 +222,7 @@ class DashboardScreen extends StatelessWidget {
             // Monthly Summary Card
             FadeInUp(
               duration: const Duration(milliseconds: 650),
-              child: _buildMonthlySummaryCard(context),
+              child: _buildMonthlySummaryCard(context, transactions),
             ),
             const SizedBox(height: 28),
 
@@ -306,7 +308,7 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMonthlySummaryCard(BuildContext context) {
+  Widget _buildMonthlySummaryCard(BuildContext context, List<Transaction> transactions) {
     final now = DateTime.now();
     final monthLabel = DateFormat('MMM yyyy', 'id').format(now);
 
