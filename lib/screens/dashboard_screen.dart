@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
 import '../models/transaction.dart';
 import '../theme/app_theme.dart';
 import '../widgets/transaction_tile.dart';
@@ -16,7 +17,6 @@ class DashboardScreen extends StatelessWidget {
 
   double get totalIncome => transactions.where((tx) => tx.isIncome).fold(0, (sum, item) => sum + item.amount);
   double get totalExpense => transactions.where((tx) => !tx.isIncome).fold(0, (sum, item) => sum + item.amount);
-  double get totalBalance => totalIncome - totalExpense;
 
   final currencyFormatter = NumberFormat.currency(locale: 'id', symbol: 'Rp ', decimalDigits: 0);
 
@@ -31,6 +31,7 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
+    final totalBalance = userProvider.initialBalance + totalIncome - totalExpense;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -152,18 +153,29 @@ class DashboardScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Total Saldo',
-                      style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Total Saldo',
+                          style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500),
+                        ),
+                        GestureDetector(
+                          onTap: () => _showEditBalanceDialog(context, userProvider),
+                          child: const Icon(Icons.edit_rounded, color: Colors.white70, size: 20),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Text(
-                        currencyFormatter.format(totalBalance),
-                        style: const TextStyle(
+                        (userProvider.initialBalance == 0 && transactions.isEmpty)
+                            ? 'Belum ada saldo'
+                            : currencyFormatter.format(totalBalance),
+                        style: TextStyle(
                           color: Colors.white, 
-                          fontSize: 36, 
+                          fontSize: (userProvider.initialBalance == 0 && transactions.isEmpty) ? 24 : 36, 
                           fontWeight: FontWeight.bold,
                           letterSpacing: -1,
                         ),
@@ -544,6 +556,78 @@ class DashboardScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showEditBalanceDialog(BuildContext context, UserProvider provider) {
+    final TextEditingController controller = TextEditingController(
+      text: provider.initialBalance > 0 
+          ? NumberFormat.currency(locale: 'id', symbol: '', decimalDigits: 0).format(provider.initialBalance).trim()
+          : '',
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Edit Saldo Awal', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              _CurrencyInputFormatter(),
+            ],
+            decoration: const InputDecoration(
+              labelText: 'Nominal Saldo',
+              prefixText: 'Rp ',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () {
+                final text = controller.text.replaceAll(RegExp(r'[^0-9]'), '');
+                if (text.isNotEmpty) {
+                  final newBalance = double.parse(text);
+                  provider.updateInitialBalance(newBalance);
+                } else {
+                  provider.updateInitialBalance(0.0);
+                }
+                Navigator.pop(context);
+              },
+              child: const Text('Simpan', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _CurrencyInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    if (newValue.text.isEmpty) {
+      return newValue.copyWith(text: '');
+    }
+    final int value = int.tryParse(newValue.text.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
+    final formatter = NumberFormat.currency(locale: 'id', symbol: '', decimalDigits: 0);
+    final String newText = formatter.format(value).trim();
+    return TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(offset: newText.length),
     );
   }
 }

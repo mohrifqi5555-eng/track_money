@@ -5,8 +5,10 @@ import 'package:animate_do/animate_do.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:provider/provider.dart';
 import '../models/transaction.dart';
 import '../theme/app_theme.dart';
+import '../providers/user_provider.dart';
 
 class ReportsScreen extends StatefulWidget {
   final List<Transaction> transactions;
@@ -24,10 +26,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
     final filteredTransactions = _getFilteredTransactions();
     final totalIncome = filteredTransactions.where((tx) => tx.isIncome).fold(0.0, (sum, item) => sum + item.amount);
     final totalExpense = filteredTransactions.where((tx) => !tx.isIncome).fold(0.0, (sum, item) => sum + item.amount);
-    final totalBalance = totalIncome - totalExpense;
+    final totalBalance = userProvider.initialBalance + totalIncome - totalExpense;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -98,7 +101,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 FadeInUp(
                   duration: const Duration(milliseconds: 600),
                   delay: const Duration(milliseconds: 400),
-                  child: _buildInsightSection(filteredTransactions, totalIncome, totalExpense),
+                  child: _buildInsightSection(filteredTransactions, totalIncome, totalExpense, totalBalance),
                 ),
                 const SizedBox(height: 40),
               ],
@@ -464,7 +467,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  Widget _buildInsightSection(List<Transaction> transactions, double income, double expense) {
+  Widget _buildInsightSection(List<Transaction> transactions, double income, double expense, double balance) {
     final topExpense = transactions.where((t) => !t.isIncome).toList()
       ..sort((a, b) => b.amount.compareTo(a.amount));
     
@@ -487,7 +490,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             width: double.infinity,
             height: 54,
             child: ElevatedButton.icon(
-              onPressed: () => _exportToPDF(transactions, income, expense),
+              onPressed: () => _exportToPDF(transactions, income, expense, balance),
               icon: const Icon(Icons.picture_as_pdf_rounded),
               label: const Text('Export Laporan PDF', style: TextStyle(fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
@@ -562,7 +565,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return uniqueDays.values.toList()..sort((a, b) => a.compareTo(b));
   }
 
-  Future<void> _exportToPDF(List<Transaction> transactions, double income, double expense) async {
+  Future<void> _exportToPDF(List<Transaction> transactions, double income, double expense, double balance) async {
     final pdf = pw.Document();
     pdf.addPage(
       pw.Page(
@@ -579,7 +582,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [pw.Text('Total Pemasukan:'), pw.Text(currencyFormatter.format(income))]),
               pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [pw.Text('Total Pengeluaran:'), pw.Text(currencyFormatter.format(expense))]),
               pw.Divider(),
-              pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [pw.Text('Saldo Akhir:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)), pw.Text(currencyFormatter.format(income - expense), style: pw.TextStyle(fontWeight: pw.FontWeight.bold))]),
+              pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [pw.Text('Saldo Akhir:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)), pw.Text(currencyFormatter.format(balance), style: pw.TextStyle(fontWeight: pw.FontWeight.bold))]),
               pw.SizedBox(height: 40),
               pw.Table.fromTextArray(context: context, data: [['Tanggal', 'Judul', 'Kategori', 'Nominal'], ...transactions.map((tx) => [DateFormat('dd/MM/yy').format(tx.date), tx.title, tx.category, currencyFormatter.format(tx.amount)])]),
             ],

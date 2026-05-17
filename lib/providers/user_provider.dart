@@ -8,10 +8,12 @@ class UserProvider with ChangeNotifier {
   String _name = 'M. Rifqi';
   String _email = 'rifqi@example.com';
   String _profilePhoto = 'https://i.pravatar.cc/150?u=moneytrack';
+  double _initialBalance = 0.0;
 
   String get name => _name;
   String get email => _email;
   String get profilePhoto => _profilePhoto;
+  double get initialBalance => _initialBalance;
 
   UserProvider() {
     _loadUser();
@@ -29,6 +31,13 @@ class UserProvider with ChangeNotifier {
     await prefs.setString('userPhoto', _profilePhoto);
   }
 
+  Future<void> updateInitialBalance(double balance) async {
+    _initialBalance = balance;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('initialBalance', _initialBalance);
+  }
+
   Future<String> saveImageLocally(File imageFile) async {
     final directory = await getApplicationDocumentsDirectory();
     final fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}${path.extension(imageFile.path)}';
@@ -41,6 +50,7 @@ class UserProvider with ChangeNotifier {
     _name = prefs.getString('userName') ?? 'M. Rifqi';
     _email = prefs.getString('userEmail') ?? 'rifqi@example.com';
     _profilePhoto = prefs.getString('userPhoto') ?? 'https://i.pravatar.cc/150?u=moneytrack';
+    _initialBalance = prefs.getDouble('initialBalance') ?? 0.0;
     notifyListeners();
   }
 
@@ -51,6 +61,7 @@ class UserProvider with ChangeNotifier {
     _name = 'M. Rifqi';
     _email = 'rifqi@example.com';
     _profilePhoto = 'https://i.pravatar.cc/150?u=moneytrack';
+    _initialBalance = 0.0;
     notifyListeners();
   }
 }

@@ -63,13 +63,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  final List<Transaction> _userTransactions = [
-    Transaction(id: 't1', title: 'Gaji Bulanan', amount: 15000000, isIncome: true, date: DateTime.now().subtract(const Duration(days: 1))),
-    Transaction(id: 't2', title: 'Kopi', amount: 45000, isIncome: false, date: DateTime.now()),
-    Transaction(id: 't3', title: 'Belanja Harian', amount: 250000, isIncome: false, date: DateTime.now()),
-    Transaction(id: 't4', title: 'Desain Freelance', amount: 2000000, isIncome: true, date: DateTime.now().subtract(const Duration(days: 2))),
-    Transaction(id: 't5', title: 'Tagihan Internet', amount: 350000, isIncome: false, date: DateTime.now().subtract(const Duration(days: 3))),
-  ];
+  final List<Transaction> _userTransactions = [];
 
   void _addNewTransaction(String title, double amount, bool isIncome, DateTime date) {
     final newTx = Transaction(
